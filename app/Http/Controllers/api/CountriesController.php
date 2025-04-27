@@ -11,17 +11,19 @@ class CountriesController extends Controller
     //* Crear un nuevo país
     public function create(Request $request)
     {
-        try{
-        $request->validate([
-            'name' => 'required|string',
-            'president' => 'required|string',
-            'size' => 'required|numeric|between:0,9999999.9999',
-            'population' => 'required|integer',
-            'flag' => 'required|string',
-            'language' => 'required|string',
-            'currency' => 'required|string',
-            'region_id' => 'required|integer'
-        ]);}catch(\Exception $e){
+        try {
+            $request->validate([
+                'name' => 'required|string|unique:countries,name',
+                'president' => 'required|string',
+                'size' => 'required|numeric',
+                'population' => 'required|integer',
+                'flag' => 'required|string',
+                'language' => 'required|string',
+                'currency' => 'required|string',
+                'region_id' => 'required|integer',
+                'user_id' => 'required|integer'
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'status' => 0,
@@ -39,6 +41,8 @@ class CountriesController extends Controller
         $country->language = $request->language;
         $country->currency = $request->currency;
         $country->region_id = $request->region_id;
+        $country->user_id = $request->user_id;
+        $country->active = 1; // Activo por defecto
         $country->save();
         if ($country) {
             return response()->json([
@@ -59,8 +63,9 @@ class CountriesController extends Controller
     //* Actualizar un país
     public function update(Request $request, $id)
     {
-        $country = Country::where($id)
+        $country = Country::where('id', $id)
             ->where('active', 1)
+            ->where('user_id', $request->user_id) // Asegurarse de que el país pertenece al usuario
             ->first();
 
         if ($country) {
@@ -89,10 +94,11 @@ class CountriesController extends Controller
     }
 
     //* Eliminar un país
-    public function delete($id)
+    public function delete(Request $request, $id)
     {
-        $country = Country::where($id)
+        $country = Country::where('id', $id)
             ->where('active', 1)
+            ->where('user_id', $request->user_id)
             ->first();
         if ($country) {
             $country->active = 0;
@@ -116,6 +122,8 @@ class CountriesController extends Controller
     {
         $countries = Country::where('active', 1)
             ->orderBy('id', 'desc')
+            ->with('user')
+            ->with('region')
             ->get();
         $array = [];
         foreach ($countries as $country) {
@@ -123,12 +131,11 @@ class CountriesController extends Controller
                 'id' => $country->id,
                 'name' => $country->name,
                 'president' => $country->president,
-                'size' => $country->size,
-                'population' => $country->population,
                 'flag' => $country->flag,
-                'language' => $country->language,
-                'currency' => $country->currency,
-                'region_id' => $country->region_id
+                'region_id' => $country->region_id,
+                'region_name' => $country->region ? $country->region->name : null,
+                'user_id' => $country->user_id,
+                'user_name' => $country->user ? $country->user->name : null,
             ];
         }
         return response()->json([
@@ -144,6 +151,8 @@ class CountriesController extends Controller
     {
         $country = Country::where('id', $id)
             ->where('active', 1)
+            -> with('user')
+            ->with('region')
             ->first();
 
         $array =  $country ? [
@@ -155,92 +164,15 @@ class CountriesController extends Controller
             'flag' => $country->flag,
             'language' => $country->language,
             'currency' => $country->currency,
-            'region_id' => $country->region_id
+            'region_id' => $country->region_id,
+            'region_name' => $country->region ? $country->region->name : null,
+            'user_id' => $country->user_id,
+            'user_name' => $country->user ? $country->user->name : null,
         ] : [];
         return response()->json([
             'success' => $country ? true : false,
             'status' => $country ? 1 : 0,
             'message' => $country ? 'País encontrado' : 'País no encontrado',
-            'data' => $array
-        ]);
-    }
-
-    //* Mostrar un país con filtros
-    public function filter(Request $request)
-    {
-        $sort = $request->input('sortOrder', 1) == 1 ? 'asc' : 'desc';
-        $sortfield = $request->input('sortField', 'nombre');
-        $limit = $request->input('rows', 10);
-        $offset = $request->input('first', 0);
-        $condicion = [];
-        if (!empty($request->input('globalFilter'))) {
-            $filtro = '%' . $request->input('globalFilter') . '%';
-            $condicion = function ($query) use ($filtro) {
-                $query->where('name', 'like', $filtro)
-                    ->orWhere('presiden', 'like', $filtro)
-                    ->orWhere('language', 'like', $filtro);
-            };
-        }
-        $countries = Country::where($condicion);
-        $total = $countries->count();
-        $countries = $countries
-            ->orderBy($sortfield, $sort)
-            ->offset($offset)
-            ->limit($limit)
-            ->get()
-            ->toArray();
-        return response()->json([
-            'success' => true,
-            'status' => 1,
-            'message' => 'Listado de países',
-            'data' => $countries,
-            'total' => $total
-        ]);
-    }
-
-    //? Catalogo de regiones
-    public function regions()
-    {
-        // Query para obtener las regiones, teniendo en cuenta que se debe hacer un join con la tabla de regiones
-        $regions = Country::select('regions.id', 'regions.name as region', 'countries.name as country')
-            ->join('regions', 'countries.region_id', '=', 'regions.id')
-            ->where('countries.active', 1)
-            ->orderBy('regions.id', 'desc')
-            ->get() // Obtener todos los registros
-            ->toArray(); // Convertir los registros a un array
-        return response()->json([
-            'success' => true,
-            'status' => 1,
-            'message' => 'Listado de regiones',
-            'data' => $regions
-        ]);
-    }
-
-    //? Mostrar los países de una región
-    public function countriesByRegion($id)
-    {
-        $countries = Country::where('region_id', $id)
-            ->where('active', 1)
-            ->orderBy('id', 'desc')
-            ->get();
-        $array = [];
-        foreach ($countries as $country) {
-            $array[] = [
-                'id' => $country->id,
-                'name' => $country->name,
-                'president' => $country->president,
-                'size' => $country->size,
-                'population' => $country->population,
-                'flag' => $country->flag,
-                'language' => $country->language,
-                'currency' => $country->currency,
-                'region_id' => $country->region_id
-            ];
-        }
-        return response()->json([
-            'success' => true,
-            'status' => 1,
-            'message' => 'Listado de países por región',
             'data' => $array
         ]);
     }

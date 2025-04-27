@@ -21,12 +21,11 @@ return new class extends Migration
             $table->string('language')->nullable();
             $table->string('currency')->nullable();
             $table->unsignedBigInteger('region_id'); // Se define sin la llave foranea
+            $table->foreign('region_id')->references('id')->on('regions');
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->foreign('user_id')->references('id')->on('users');
             $table->boolean('active')->default(true);
             $table->timestamps();
-        });
-        // Agregar la llave foranea
-        Schema::table('countries', function (Blueprint $table) {
-            $table->foreign('region_id')->references('id')->on('regions')->onDelete('cascade');
         });
     }
 

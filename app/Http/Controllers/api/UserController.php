@@ -46,87 +46,14 @@ class UserController extends Controller
                 'success' => true,
                 'status' => 1,
                 'message' => 'Usuario creado correctamente',
-                'data' => $user
+                'data' => $user,
+                'id' => $user->id,
             ]);
         } else {
             return response()->json([
                 'success' => false,
                 'status' => 0,
                 'message' => 'Error al crear el usuario'
-            ]);
-        }
-    }
-
-    //* Cambiar contraseña
-    public function changePassword(Request $request, $id)
-    {
-        $user = User::find($request->id); // Buscar el usuario por ID
-        if ($user) { // Si el usuario existe
-            $user->password = Hash::make($request->password); // Cambiar la contraseña
-            // Obtener el email del usuario
-            $email = $user->email;
-            $user->save(); // Guardar los cambios
-            if ($user) { // Si la contraseña se cambió correctamente
-                // Enviar correo de cambio de contraseña
-                $emailSender = new Email();
-                $emailSender->sendEmail(
-                    $email,
-                    'Cambio de contraseña',
-                    'Hola ' . $user->name . ', su contraseña ha sido cambiada correctamente. Su nueva contraseña es: ' . $request->password
-                );
-                return response()->json([
-                    'success' => true,
-                    'status' => 1,
-                    'message' => 'Contraseña cambiada correctamente',
-                    'data' => $user
-                ]);
-            }
-            return response()->json([
-                'success' => false,
-                'status' => 0,
-                'message' => 'Error al cambiar la contraseña'
-            ]);
-        } else {
-            return response()->json([
-                'success' => false,
-                'status' => 0,
-                'message' => 'Usuario no encontrado'
-            ]);
-        }
-    }
-
-    //? Actualizar un usuario
-    public function update(Request $request, $id)
-    {
-        $user = User::find($id); // Buscar el usuario por ID
-        if ($user) { // Si el usuario existe
-            $user->name = $request->name;
-            $user->last_name = $request->last_name;
-            $user->email = $request->email;
-            $user->phone = $request->phone;
-            $user->gender = $request->gender;
-            $user->birthdate = $request->birthdate;
-            $user->save(); // Guardar los cambios
-            if ($user) { // Si el usuario se actualizó correctamente
-                // Enviar correo de actualización de perfil
-                $emailSender = new Email();
-                $emailSender->sendEmail(
-                    $request->email,
-                    'Actualización de perfil',
-                    'Hola ' . $user->name . ', su perfil ha sido actualizado correctamente.'
-                );
-                return response()->json([
-                    'success' => true,
-                    'status' => 1,
-                    'message' => 'Usuario actualizado correctamente',
-                    'data' => $user
-                ]);
-            }
-        } else {
-            return response()->json([
-                'success' => false,
-                'status' => 0,
-                'message' => 'Usuario no encontrado'
             ]);
         }
     }
@@ -147,6 +74,8 @@ class UserController extends Controller
                     'status' => 1,
                     'message' => 'Inicio de sesión correcto',
                     'data' => $user,
+                    'id' => $user->id,
+                    'name' => $user->name,
                     'token' => $token
                 ]);
             } else {
@@ -166,22 +95,12 @@ class UserController extends Controller
     }
 
     //* Logout
-    public function logout($id)
+    public function logout(Request $request)
     {
-        $user = User::find($id);
-        if ($user) {
-            $user->tokens()->delete();
-            return response()->json([
-                'success' => true,
-                'status' => 1,
-                'message' => 'Sesión cerrada correctamente'
-            ]);
-        } else {
-            return response()->json([
-                'success' => false,
-                'status' => 0,
-                'message' => 'Usuario no encontrado'
-            ]);
-        }
+        $request->user()->currentAccessToken()->delete();
+        return response()->json([
+            'status' => 1,
+            'message' => 'Usuario deslogueado con éxito',
+        ], 200);
     }
 }

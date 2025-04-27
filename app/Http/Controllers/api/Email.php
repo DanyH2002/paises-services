@@ -13,9 +13,8 @@ class Email extends Controller
         if (!is_array($to)) {
             $to = [$to];
         }
-        Mail::send($body, function ($message) use ($to, $subject) {
-            $message->to($to)
-                ->subject($subject);
+        Mail::raw($body, function ($message) use ($to, $subject) {
+            $message->to($to)->subject($subject);
         });
     }
 }

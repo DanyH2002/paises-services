@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Notifications\Notifiable;
 
 class Country extends Model
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
     protected $table = 'countries';
     protected $primaryKey = 'id';
 
@@ -34,7 +35,12 @@ class Country extends Model
     // Relación un país pertenece a una región
     public function region()
     {
-        return $this->belongsTo('App\Models\regions');
+        return $this->belongsTo(regions::class, 'region_id');
+    }
+    // Relación un país pertenece a un usuario
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
 }
