@@ -42,12 +42,15 @@ class UserController extends Controller
         );
 
         if ($user) { // Si el usuario se guardó correctamente
+            $token = $user->createToken('auth_token')->plainTextToken;
             return response()->json([
                 'success' => true,
                 'status' => 1,
                 'message' => 'Usuario creado correctamente',
                 'data' => $user,
                 'id' => $user->id,
+                'name' => $user->name,
+                'token' => $token
             ]);
         } else {
             return response()->json([
