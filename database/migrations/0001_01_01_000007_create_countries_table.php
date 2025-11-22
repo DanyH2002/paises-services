@@ -14,15 +14,21 @@ return new class extends Migration
         Schema::create('countries', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('official_name');
             $table->string('president');
+            $table->string('capital');
             $table->decimal('size', 20, 4);
-            $table->integer('population');
+            $table->bigInteger('population');
             $table->string('flag');
-            $table->string('language')->nullable();
-            $table->string('currency')->nullable();
-            $table->unsignedBigInteger('region_id'); // Se define sin la llave foranea
-            $table->foreign('region_id')->references('id')->on('regions');
+            $table->decimal('latitude', 10, 7)->nullable();
+            $table->decimal('longitude', 10, 7)->nullable();
+            $table->unsignedBigInteger('continent_id');
+            $table->unsignedBigInteger('language_id');
+            $table->unsignedBigInteger('currency_id');
             $table->unsignedBigInteger('user_id')->nullable();
+            $table->foreign('continent_id')->references('id')->on('continents');
+            $table->foreign('language_id')->references('id')->on('language');
+            $table->foreign('currency_id')->references('id')->on('currency');
             $table->foreign('user_id')->references('id')->on('users');
             $table->boolean('active')->default(true);
             $table->timestamps();
