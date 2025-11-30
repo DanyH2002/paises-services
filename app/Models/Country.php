@@ -24,8 +24,6 @@ class Country extends Model
         'continent_id',
         'language_id',
         'currency_id',
-        'latitude',
-        'longitude',
         'user_id'
     ];
 
@@ -34,9 +32,7 @@ class Country extends Model
     ];
 
     protected $casts = [
-        'size' => 'decimal:4',
-        'latitude' => 'decimal:7',
-        'longitude' => 'decimal:7'
+        'size' => 'decimal:4'
     ];
 
     public function continent()

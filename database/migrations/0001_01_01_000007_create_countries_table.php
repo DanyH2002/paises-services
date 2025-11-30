@@ -20,8 +20,6 @@ return new class extends Migration
             $table->decimal('size', 20, 4);
             $table->bigInteger('population');
             $table->string('flag');
-            $table->decimal('latitude', 10, 7)->nullable();
-            $table->decimal('longitude', 10, 7)->nullable();
             $table->unsignedBigInteger('continent_id');
             $table->unsignedBigInteger('language_id');
             $table->unsignedBigInteger('currency_id');

@@ -20,8 +20,6 @@ class UserController extends Controller
             'email' => 'required|email|unique:users',
             'password' => 'required|min:8|max:16',
             'phone' => 'required|string',
-            'gender' => 'required|string',
-            'birthdate' => 'required|date',
         ]);
 
         $user = new User();
@@ -30,8 +28,6 @@ class UserController extends Controller
         $user->email = $request->email;
         $user->password = Hash::make($request->password);
         $user->phone = $request->phone;
-        $user->gender = $request->gender;
-        $user->birthdate = $request->birthdate;
         $user->save();
         // Enviar correo de bienvenida
         $email = new Email();
@@ -48,8 +44,6 @@ class UserController extends Controller
                 'status' => 1,
                 'message' => 'Usuario creado correctamente',
                 'data' => $user,
-                'id' => $user->id,
-                'name' => $user->name,
                 'token' => $token
             ]);
         } else {
@@ -77,8 +71,6 @@ class UserController extends Controller
                     'status' => 1,
                     'message' => 'Inicio de sesión correcto',
                     'data' => $user,
-                    'id' => $user->id,
-                    'name' => $user->name,
                     'token' => $token
                 ]);
             } else {

@@ -36,8 +36,6 @@ class CountriesController extends Controller
                 'continent_id'  => $request->continent_id,
                 'language_id'   => $request->language_id,
                 'currency_id'   => $request->currency_id,
-                'latitude'      => $request->latitude,
-                'longitude'     => $request->longitude,
                 'flag'          => $path,
                 'active'        => 1,
                 'user_id'       => $request->user()->id
