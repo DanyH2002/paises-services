@@ -33,6 +33,7 @@ class CountriesController extends Controller
                 'capital'       => $request->capital,
                 'size'          => $request->size,
                 'population'    => $request->population,
+
                 'continent_id'  => $request->continent_id,
                 'language_id'   => $request->language_id,
                 'currency_id'   => $request->currency_id,
@@ -63,12 +64,38 @@ class CountriesController extends Controller
         if ($country->user_id !== $request->user()->id) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
+        $request->validate([
+            'name' => 'required|string',
+            'official_name' => 'required|string',
+            'president' => 'required|string',
+            'capital' => 'required|string',
+            'size' => 'required|numeric',
+            'population' => 'required|numeric',
+            'continent_id' => 'required|numeric',
+            'language_id' => 'required|numeric',
+            'currency_id' => 'required|numeric'
+        ]);
+
+        $country->name = $request->name;
+        $country->official_name = $request->official_name;
+        $country->president = $request->president;
+        $country->capital = $request->capital;
+        $country->size = $request->size;
+        $country->population = $request->population;
+
+        $country->continent_id = $request->continent_id;
+        $country->language_id = $request->language_id;
+        $country->currency_id = $request->currency_id;
+
         if ($request->hasFile('flag')) {
+            // Eliminar bandera previa
             Storage::disk('public')->delete($country->flag);
+            // Guardar nueva bandera
             $path = $request->file('flag')->store('flags', 'public');
             $country->flag = $path;
         }
-        $country->update($request->all());
+
+        $country->save();
         return response()->json([
             'success' => true,
             'status' => 1,
@@ -113,10 +140,25 @@ class CountriesController extends Controller
     public function show($id)
     {
         try {
-            $country = Country::where('id', $id)
-                ->where('active', 1)
-                ->with(['continent', 'language', 'currency', 'user'])
-                ->first();
+            $country = Country::with(['continent', 'language', 'currency', 'user'])
+                ->find($id);
+
+            if (!$country) {
+                return response()->json([
+                    'success' => false,
+                    'status' => 0,
+                    'message' => 'País no encontrado'
+                ]);
+            }
+
+            if ($country->active != 1) {
+                return response()->json([
+                    'success' => true,
+                    'status' => 1,
+                    'message' => 'País no disponible'
+                ]);
+            }
+
             return response()->json([
                 'success' => true,
                 'status' => 1,

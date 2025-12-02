@@ -19,8 +19,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/create', [CountriesController::class, 'create']);
         Route::get('/list', [CountriesController::class, 'list']);
         Route::get('/{id}', [CountriesController::class, 'show']);
-        Route::put('/update/{id}', [CountriesController::class, 'update'])->where('id', '[0-9]+');
-        Route::delete('/delete/{id}', [CountriesController::class, 'delete'])->where('id', '[0-9]+');
+        Route::post('/update/{id}', [CountriesController::class, 'update']);
+        Route::delete('/delete/{id}', [CountriesController::class, 'delete']);
     });
 
     Route::prefix('catalogs')->group(function () {
